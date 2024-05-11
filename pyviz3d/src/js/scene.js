@@ -154,6 +154,165 @@ function get_points(properties){
 	return points
 }
 
+// function get_timepoints(properties,name) {
+// 	let binary_filename = properties['binary_filename'];
+// 	let shape = properties['shape'];
+
+// 	let new_positions = [];
+// 	let new_normals = [];
+// 	let colors_float32 = [];
+// 	let colors = [];
+  
+// 	fetch(binary_filename)
+// 	  .then(response => response.arrayBuffer())
+// 	  .then(buffer => {
+// 		let positions = new Float32Array(buffer, 0, shape[0] * shape[1] * 3);
+
+// 		let normals = new Float32Array(buffer, (shape[0] * shape[1] * 3) * 4, shape[0] * shape[1] * 3);
+
+// 		let colors_uint8 = new Uint8Array(buffer, (shape[0] * shape[1] * 3) * 8, shape[0] * shape[1] * 3);
+// 		colors_float32 = new Float32Array(colors_uint8);
+// 		for (let i = 0; i < colors_float32.length; i++) {
+// 		  colors_float32[i] /= 255.0;
+// 		}
+		
+		
+// 		for (let i = 0; i < shape[0]; i++) {
+// 		  new_positions.push([]);
+// 		  new_normals.push([]);
+// 		  colors.push([]);
+// 		  for (let j = 0; j < shape[1]; j++) {
+// 			let positionRow = [];
+// 			let normalRow = [];
+// 			let colorRow = [];
+// 			for (let k = 0; k < shape[2]; k++) {
+// 			  let index = (i * shape[1] * shape[2]) + (j * shape[2]) + k;
+// 			  positionRow.push(positions[index]);
+// 			  normalRow.push(normals[index]);
+// 			  colorRow.push(colors_float32[index]);
+// 			}
+// 			new_positions[i].push(positionRow);
+// 			new_normals[i].push(normalRow);
+// 			colors[i].push(colorRow);
+// 		  }
+// 		}
+  
+// 	  }).then(step_progress_bar)
+// 	  .then(render);;
+// 	hand_points = new_positions;
+// 	hand_normals = new_normals;	
+// 	hand_colors = colors;
+	
+// 	hand_position_index = 0;
+	
+// 	let nested_dict = {"position": hand_points, 
+// 	  					"normal": hand_normals,
+// 						"color": hand_colors,
+// 						"index": hand_position_index}
+
+// 	time_data[name] = nested_dict
+// 	let point = updateHandPosition();
+// 	console.log("point:",point);
+// 	return point
+//   }
+function get_timepoints(properties, name) {
+    let binary_filename = properties['binary_filename'];
+    let shape = properties['shape'];
+
+    let new_positions = [];
+    let new_normals = [];
+    let colors_float32 = [];
+    let colors = [];
+
+    return fetch(binary_filename)
+        .then(response => response.arrayBuffer())
+        .then(buffer => {
+            let positions = new Float32Array(buffer, 0, shape[0] * shape[1] * 3);
+            let normals = new Float32Array(buffer, (shape[0] * shape[1] * 3) * 4, shape[0] * shape[1] * 3);
+            let colors_uint8 = new Uint8Array(buffer, (shape[0] * shape[1] * 3) * 8, shape[0] * shape[1] * 3);
+
+            colors_float32 = new Float32Array(colors_uint8);
+            for (let i = 0; i < colors_float32.length; i++) {
+                colors_float32[i] /= 255.0;
+            }
+
+            for (let i = 0; i < shape[0]; i++) {
+                new_positions.push([]);
+                new_normals.push([]);
+                colors.push([]);
+                for (let j = 0; j < shape[1]; j++) {
+                    let positionRow = [];
+                    let normalRow = [];
+                    let colorRow = [];
+                    for (let k = 0; k < shape[2]; k++) {
+                        let index = (i * shape[1] * shape[2]) + (j * shape[2]) + k;
+                        positionRow.push(positions[index]);
+                        normalRow.push(normals[index]);
+                        colorRow.push(colors_float32[index]);
+                    }
+                    new_positions[i].push(positionRow);
+                    new_normals[i].push(normalRow);
+                    colors[i].push(colorRow);
+                }
+            }
+        }).then(step_progress_bar).then(render)
+        .then(() => {
+
+			let start = 0
+            let nested_dict = {
+                "position": new_positions,
+                "normal": new_normals,
+                "color": colors,
+                "index": start
+            };
+
+            time_data[name] = nested_dict;
+
+
+
+			const newPositions = new_positions[0];
+			const newColor = colors[0];
+			const newNormal = new_normals[0];
+			
+	
+			// Create a simple buffer geometry and material for debugging
+			const geometry = new THREE.BufferGeometry();
+			// const material = new THREE.PointsMaterial({ color: 0xff0000, size: 0.01 }); // Red color
+			const flatNormals = newNormal.flat();
+			geometry.setAttribute('normal', new THREE.Float32BufferAttribute(flatNormals, 3));
+			const ColorNormals = newColor.flat();
+			geometry.setAttribute('color', new THREE.Float32BufferAttribute(ColorNormals, 3));
+			// Convert the new positions to a flat array for the geometry
+			const flatPositions = newPositions.flat();
+			geometry.setAttribute('position', new THREE.Float32BufferAttribute(flatPositions, 3));
+			
+			// Create a new Points object for debugging
+			let uniforms = {
+				pointSize: { value: 0.1 },
+				alpha: {value: 1.0},
+				shading_type: {value: 1},
+			};
+
+			let material = new THREE.ShaderMaterial( {
+				uniforms:       uniforms,
+				vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+				fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+				transparent:    true});
+
+			let hand_points_object = new THREE.Points(geometry, material);
+			
+			return hand_points_object;
+
+
+        })
+        .then(point => {
+            return point;
+        })
+        .catch(error => {
+            console.error('Error fetching or processing data:', error);
+        });
+}
+
 function get_labels(properties){
 	const labels = new THREE.Group();
 	labels.name = "labels"
@@ -472,11 +631,32 @@ function init_gui(objects){
 			fol.add(value, 'visible').name(splits[1]).onChange(render);
 			fol.open();
 		} else {
-			if (value.name.localeCompare('labels') != 0) {
+			// if (value.name.localeCompare('labels') != 0) {
+			// 	gui.add(value, 'visible').name(name).onChange(render);
+			// }
+			if (value && value.name && value.name.localeCompare('labels') != 0) {
 				gui.add(value, 'visible').name(name).onChange(render);
 			}
 		}
 	}
+}
+
+let startTime;
+
+function updateTimer() {
+    const currentTime = new Date().getTime();
+    const elapsedTime = currentTime - startTime;
+
+    const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
+    const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+    const milliseconds = Math.floor(elapsedTime % 1000);
+
+    const timerElement = document.getElementById('timer');
+    timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${milliseconds.toString().padStart(3, '0')}`;
+	
+    requestAnimationFrame(updateTimer);
+	render();
 }
 
 function render() {
@@ -527,9 +707,11 @@ function init(){
 
 	raycaster = new THREE.Raycaster();
 	raycaster.params.Points.threshold = 1.0;
+	startTime = new Date().getTime();
+    updateTimer();
 }
 
-function create_threejs_objects(properties){
+async function create_threejs_objects(properties){
 
 	num_objects_curr = 0.0;
 	num_objects = parseFloat(Object.entries(properties).length);
@@ -577,6 +759,11 @@ function create_threejs_objects(properties){
 			step_progress_bar();
 			render();
 		}
+		if (String(object_properties['type']).localeCompare('timepoints') == 0){
+			threejs_objects[object_name] = await get_timepoints(object_properties,object_name);
+			render();
+		}
+		
 		threejs_objects[object_name].visible = object_properties['visible'];
 		threejs_objects[object_name].frustumCulled = false;
 	}
@@ -610,6 +797,55 @@ function update_controls(){
 	controls.enablePan = true; // enable dragging
 }
 
+function updateColors() {
+    // Update the color properties of the objects based on the current timestep
+    for (const [object_name, object] of Object.entries(threejs_objects)) {
+        if (object.material) {
+            // Check if the object is an arrow
+		
+            if (object_name.startsWith("Axis")) {
+                // Update the color of the arrow material
+				object.material.color.setRGB(Math.sin(Date.now() * 0.001), Math.cos(Date.now() * 0.001), Math.tan(Date.now() * 0.001));
+                // object.material.uniforms.alpha.value = Math.sin(Date.now() * 0.001); // Example color change based on timestamp
+            } 
+        }
+    }
+
+    // Re-render the scene after updating the object properties
+    render();
+}
+function updatePoints() {
+	const timerElement = document.getElementById('timer');
+	const timerValue = timerElement.textContent;
+	
+	for (const [object_name, object] of Object.entries(threejs_objects)) {
+		const objectNameParts = object_name.split(' ');
+		if (objectNameParts.length > 1) {
+			
+		const objectTimeParts = objectNameParts[1].split(';');
+		const milliObjectTimeParts = objectNameParts[1].split('.');
+		if (objectTimeParts.length === 3) {
+			
+			// const objectTime = `${objectTimeParts[0].padStart(2, '0')}:${objectTimeParts[1].padStart(2, '0')}:${objectTimeParts[2].replace(/\.\d{0}/, ':')}`;
+			const objectTime = `${objectTimeParts[0].padStart(2, '0')}:${objectTimeParts[1].padStart(2, '0')}:${objectTimeParts[2].replace(/\..*/, '')}`;
+
+
+			const timerTimeParts = timerValue.split(':');
+			// const timerTime = `${timerTimeParts[0].padStart(2, '0')}:${timerTimeParts[1].padStart(2, '0')}:${timerTimeParts[2].padStart(2, '0')}:${timerTimeParts[3].padStart(2, '0')}`;
+			const timerTime = `${timerTimeParts[0].padStart(2, '0')}:${timerTimeParts[1].padStart(2, '0')}:${timerTimeParts[2].padStart(2, '0')}`;
+
+			if (objectTime == timerTime) {
+				console.log("visible");
+			threejs_objects[object_name].visible = true;
+			} else {
+			threejs_objects[object_name].visible = false;
+			}
+		}
+		}
+	}
+  }
+
+
 const scene = new THREE.Scene();
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -635,6 +871,8 @@ const gui = new GUI({autoPlace: true, width: 120});
 // dict containing all objects of the scene
 let threejs_objects = {};
 
+let time_data = {};
+
 init();
 
 // Load nodes.json and perform one after the other the following commands:
@@ -646,4 +884,71 @@ fetch('nodes.json')
     .then(() => add_threejs_objects_to_scene(threejs_objects))
     .then(() => init_gui(threejs_objects))
 	.then(() => console.log('Done'))
-	.then(render);
+	.then(() => console.log(threejs_objects))
+	.then(() => {
+        setInterval(updateHandPosition, 100);
+        setInterval(updateTimer, 10);
+		render();
+    });
+
+function updateHandPosition() {
+
+	for (let key in time_data) 
+	{
+		if (time_data.hasOwnProperty(key)) 
+		{
+			let nestedDict = time_data[key];
+			nestedDict["index"] = nestedDict["index"] + 1; 
+			if (nestedDict["index"] >= nestedDict.position.length) {
+				nestedDict["index"] = 0;
+			}
+			
+			
+
+			const newPositions = nestedDict.position[nestedDict["index"]];
+			const newColor = nestedDict.color[nestedDict["index"]];
+			const newNormal = nestedDict.normal[nestedDict["index"]];
+			
+	
+			// Get the existing geometry and material from the threejs_objects object
+			const geometry = threejs_objects[key].geometry;
+			const material = threejs_objects[key].material;
+			material.uniforms.pointSize.value = 10; // Set the new point size
+            material.uniforms.alpha.value = 1.0; // Set the new alpha value
+            material.uniforms.shading_type.value = 1;
+			// const material = new THREE.PointsMaterial({ color: 0xff0000, size: 0.01 }); // Red color
+			const flatNormals = newNormal.flat();
+			geometry.setAttribute('normal', new THREE.Float32BufferAttribute(flatNormals, 3));
+			const flatColors = newColor.flat();
+			geometry.setAttribute('color', new THREE.Float32BufferAttribute(flatColors, 3));
+			// Convert the new positions to a flat array for the geometry
+			const flatPositions = newPositions.flat();
+			geometry.setAttribute('position', new THREE.Float32BufferAttribute(flatPositions, 3));
+
+			// If you need to recompile the shader
+			material.needsUpdate = true;
+			
+			geometry.attributes.position.needsUpdate = true;
+			geometry.attributes.normal.needsUpdate = true;
+			geometry.attributes.color.needsUpdate = true;
+
+		}
+	}
+}
+document.getElementById('reset_button').onclick = function() {
+    // Handle button click here
+	resetTime();
+};
+// document.getElementById("reset_button").onclick = () => myFunction();
+function resetTime() {
+	for (let key in time_data) 
+	{
+		if (time_data.hasOwnProperty(key)) 
+		{	
+			let nestedDict = time_data[key];
+			nestedDict["index"] = 0; 
+		}
+	}
+	// Reset the start time to the current time
+	startTime = new Date().getTime();
+};

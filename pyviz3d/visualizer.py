@@ -1,8 +1,10 @@
 """The visualizer class is used to show 3d scenes."""
 
 from .points import Points
+from .time_points import TimePoints
 from .labels import Labels
 from .lines import Lines
+from .time_lines import TimeLines
 from .mesh import Mesh
 from .camera import Camera
 from .cuboid import Cuboid
@@ -173,6 +175,89 @@ blender_tools.main()")
         self.elements[self.__parse_name(name)] = Points(
             positions, colors, normals, point_size, resolution, visible, alpha, shading_type
         )
+    
+    def add_time_points(
+        self,
+        name: str,
+        positions: np.array,
+        shape: np.array,
+        colors: np.array=None,
+        normals: np.array=None,
+        point_size: int=25,
+        resolution: int=5,
+        visible: bool=True,
+        alpha: float=1.0,
+    ):
+        """Add points to the visualizer.
+
+        :param name: The name of the points displayed in the visualizer. Use ';' in the name to create sub-layers.
+        :param positions: The point positions.
+        :param normals: The point normals.
+        :param colors: The point colors.
+        :param point_size: The point size.
+        :param resolution: The resolution of the blender sphere.
+        :param visible: Bool if points are visible.
+        :param alpha: Alpha value of colors.
+        """
+        
+        assert positions[0].shape[1] == 3
+        assert colors[0] is None or positions[0].shape == colors[0].shape
+        assert normals is None or positions[0].shape == normals[0].shape
+
+        shading_type = 1  # Phong shading
+        # if colors is None:
+        #     colors = np.ones(positions.shape, dtype=np.uint8) * 50  # gray
+        # if normals is None:
+        #     normals = np.ones(positions.shape, dtype=np.float32)
+        #     shading_type = 0  # Uniform shading when no normals are available
+
+        alpha = min(max(alpha, 0.0), 1.0)  # cap alpha to [0..1]
+
+        self.elements[self.__parse_name(name)] = TimePoints(
+            positions, colors, normals, point_size, resolution, visible, alpha, shading_type
+        )
+    
+    def add_time_lines(
+        self,
+        name: str,
+        positions: np.array,
+        shape: np.array,
+        colors: np.array=None,
+        normals: np.array=None,
+        point_size: int=25,
+        resolution: int=5,
+        visible: bool=True,
+        alpha: float=1.0,
+    ):
+        """Add points to the visualizer.
+
+        :param name: The name of the points displayed in the visualizer. Use ';' in the name to create sub-layers.
+        :param positions: The point positions.
+        :param normals: The point normals.
+        :param colors: The point colors.
+        :param point_size: The point size.
+        :param resolution: The resolution of the blender sphere.
+        :param visible: Bool if points are visible.
+        :param alpha: Alpha value of colors.
+        """
+        assert positions[0].shape[1] == 3
+        print(colors[0].shape)
+        assert colors[0] is None or np.all(np.array([positions[0].shape[0]/2,positions[0].shape[1]]) == colors[0].shape)
+        assert normals is None or positions[0].shape == normals[0].shape
+
+        shading_type = 1  # Phong shading
+        # if colors is None:
+        #     colors = np.ones(positions.shape, dtype=np.uint8) * 50  # gray
+        # if normals is None:
+        #     normals = np.ones(positions.shape, dtype=np.float32)
+        #     shading_type = 0  # Uniform shading when no normals are available
+
+        alpha = min(max(alpha, 0.0), 1.0)  # cap alpha to [0..1]
+
+        self.elements[self.__parse_name(name)] = TimePoints(
+            positions, colors, normals, point_size, resolution, visible, alpha, shading_type
+        )
+
 
     def add_labels(self,
                    name: str,
