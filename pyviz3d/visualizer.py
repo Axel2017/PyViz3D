@@ -11,6 +11,7 @@ from .cuboid import Cuboid
 from .polyline import Polyline
 from .arrow import Arrow
 from .circles_2d import Circles2D
+from .time_labels import TimeLabels
 
 import os
 import sys
@@ -187,6 +188,7 @@ blender_tools.main()")
         resolution: int=5,
         visible: bool=True,
         alpha: float=1.0,
+        frequency=None
     ):
         """Add points to the visualizer.
 
@@ -214,7 +216,7 @@ blender_tools.main()")
         alpha = min(max(alpha, 0.0), 1.0)  # cap alpha to [0..1]
 
         self.elements[self.__parse_name(name)] = TimePoints(
-            positions, colors, normals, point_size, resolution, visible, alpha, shading_type
+            positions, colors, normals, point_size, resolution, visible, alpha, shading_type,frequency
         )
     
     def add_time_lines(
@@ -228,6 +230,7 @@ blender_tools.main()")
         resolution: int=5,
         visible: bool=True,
         alpha: float=1.0,
+        frequency=None
     ):
         """Add points to the visualizer.
 
@@ -241,7 +244,7 @@ blender_tools.main()")
         :param alpha: Alpha value of colors.
         """
         assert positions[0].shape[1] == 3
-        print(colors[0].shape)
+        print(np.array([positions[0].shape[0]/2,positions[0].shape[1]])," ",colors[0].shape)
         assert colors[0] is None or np.all(np.array([positions[0].shape[0]/2,positions[0].shape[1]]) == colors[0].shape)
         assert normals is None or positions[0].shape == normals[0].shape
 
@@ -254,8 +257,8 @@ blender_tools.main()")
 
         alpha = min(max(alpha, 0.0), 1.0)  # cap alpha to [0..1]
 
-        self.elements[self.__parse_name(name)] = TimePoints(
-            positions, colors, normals, point_size, resolution, visible, alpha, shading_type
+        self.elements[self.__parse_name(name)] = TimeLines(
+            positions, colors, normals, point_size, resolution, visible, alpha, shading_type,frequency
         )
 
 
@@ -274,6 +277,23 @@ blender_tools.main()")
         :param visible: Bool if label is visible.
         """
         self.elements[self.__parse_name(name)] = Labels(labels, positions, colors, visible)
+    
+    def add_time_labels(self,
+                   name: str,
+                   labels: list,
+                   positions: np.array,
+                   colors: np.array,
+                   time: np.array,
+                   visible: bool=True):
+        """Add labels to the visualizer.
+        
+        :param name: The name of the labels.
+        :param labels: The text value of the labels.
+        :param positions: The 3D positions of the labels.
+        :param colors: The text color of the individual labels.
+        :param visible: Bool if label is visible.
+        """
+        self.elements[self.__parse_name(name)] = TimeLabels(labels, positions, colors, visible,time)
 
     def add_circles_2d(self,
                        name: str,

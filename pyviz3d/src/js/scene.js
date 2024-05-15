@@ -154,67 +154,96 @@ function get_points(properties){
 	return points
 }
 
-// function get_timepoints(properties,name) {
-// 	let binary_filename = properties['binary_filename'];
-// 	let shape = properties['shape'];
 
-// 	let new_positions = [];
-// 	let new_normals = [];
-// 	let colors_float32 = [];
-// 	let colors = [];
-  
-// 	fetch(binary_filename)
-// 	  .then(response => response.arrayBuffer())
-// 	  .then(buffer => {
-// 		let positions = new Float32Array(buffer, 0, shape[0] * shape[1] * 3);
+function get_timelines(properties, name) {
+    let binary_filename = properties['binary_filename'];
+    let shape = properties['shape'];
 
-// 		let normals = new Float32Array(buffer, (shape[0] * shape[1] * 3) * 4, shape[0] * shape[1] * 3);
+    let new_positions = [];
+    let colors_float32 = [];
+    let colors = [];
 
-// 		let colors_uint8 = new Uint8Array(buffer, (shape[0] * shape[1] * 3) * 8, shape[0] * shape[1] * 3);
-// 		colors_float32 = new Float32Array(colors_uint8);
-// 		for (let i = 0; i < colors_float32.length; i++) {
-// 		  colors_float32[i] /= 255.0;
-// 		}
-		
-		
-// 		for (let i = 0; i < shape[0]; i++) {
-// 		  new_positions.push([]);
-// 		  new_normals.push([]);
-// 		  colors.push([]);
-// 		  for (let j = 0; j < shape[1]; j++) {
-// 			let positionRow = [];
-// 			let normalRow = [];
-// 			let colorRow = [];
-// 			for (let k = 0; k < shape[2]; k++) {
-// 			  let index = (i * shape[1] * shape[2]) + (j * shape[2]) + k;
-// 			  positionRow.push(positions[index]);
-// 			  normalRow.push(normals[index]);
-// 			  colorRow.push(colors_float32[index]);
-// 			}
-// 			new_positions[i].push(positionRow);
-// 			new_normals[i].push(normalRow);
-// 			colors[i].push(colorRow);
-// 		  }
-// 		}
-  
-// 	  }).then(step_progress_bar)
-// 	  .then(render);;
-// 	hand_points = new_positions;
-// 	hand_normals = new_normals;	
-// 	hand_colors = colors;
-	
-// 	hand_position_index = 0;
-	
-// 	let nested_dict = {"position": hand_points, 
-// 	  					"normal": hand_normals,
-// 						"color": hand_colors,
-// 						"index": hand_position_index}
+    return fetch(binary_filename)
+        .then(response => response.arrayBuffer())
+        .then(buffer => {
+            let positions = new Float32Array(buffer, 0, shape[0] * shape[1] * 3);
+            let colors_uint8 = new Uint8Array(buffer, (shape[0] * shape[1] * 3) * 4, shape[0] * shape[1]/2 * 3);
+            colors_float32 = new Float32Array(colors_uint8);
+            for (let i = 0; i < colors_float32.length; i++) {
+                colors_float32[i] /= 255.0;
+            }
+            for (let i = 0; i < shape[0]; i++) {
+                new_positions.push([]);
+                // colors.push([]);
+                for (let j = 0; j < shape[1]; j++) {
+                    let positionRow = [];
+                    let colorRow = [];
+                    for (let k = 0; k < shape[2]; k++) {
+                        let index = (i * shape[1] * shape[2]) + (j * shape[2]) + k;
+                        positionRow.push(positions[index]);
+                        // colorRow.push(colors_float32[index]);
+                    }
+                    new_positions[i].push(positionRow);
+                    // colors[i].push(colorRow);
+                }
+            }
 
-// 	time_data[name] = nested_dict
-// 	let point = updateHandPosition();
-// 	console.log("point:",point);
-// 	return point
-//   }
+
+			for (let i = 0; i < shape[0]; i++) {
+				colors.push([]);
+				for (let j = 0; j < shape[1] / 2; j++) {
+				  let colorRow = [];
+				  for (let k = 0; k < shape[2]; k++) {
+					let index = (i * shape[1] / 2 * shape[2]) + (j * shape[2]) + k;
+					colorRow.push(colors_float32[index]);
+				  }
+				  colors[i].push(colorRow); // Push the colorRow once
+				  colors[i].push(colorRow); // Push the same colorRow again
+				}
+			  }
+        }).then(step_progress_bar).then(render)
+        .then(() => {
+
+			let start = 0
+            let nested_dict = {
+                "position": new_positions,
+                "color": colors,
+                "index": start,
+				"frequency": properties['frequency']
+            };
+			line_time_data[name] = nested_dict;
+
+			const newPositions = new_positions[0];
+			const newColor = colors[0];
+			
+			// Create a simple buffer geometry and material for debugging
+			const geometry = new THREE.BufferGeometry();
+			// const material = new THREE.PointsMaterial({ color: 0xff0000, size: 0.01 }); // Red color
+			const ColorNormals = newColor.flat();
+			geometry.setAttribute('color', new THREE.Float32BufferAttribute(ColorNormals, 3));
+			// Convert the new positions to a flat array for the geometry
+			const flatPositions = newPositions.flat();
+			geometry.setAttribute('position', new THREE.Float32BufferAttribute(flatPositions, 3));
+
+			
+			var material = new THREE.LineBasicMaterial({color: 0xFFFFFF, vertexColors: true});
+				
+			let line_object = new THREE.LineSegments( geometry, material );
+			
+			return line_object;
+
+
+        })
+        .then(point => {
+            return point;
+        })
+        .catch(error => {
+            console.error('Error fetching or processing data:', error);
+        });
+}
+
+
+
 function get_timepoints(properties, name) {
     let binary_filename = properties['binary_filename'];
     let shape = properties['shape'];
@@ -263,9 +292,9 @@ function get_timepoints(properties, name) {
                 "position": new_positions,
                 "normal": new_normals,
                 "color": colors,
-                "index": start
+                "index": start,
+				"frequency": properties['frequency']
             };
-
             time_data[name] = nested_dict;
 
 
@@ -273,7 +302,7 @@ function get_timepoints(properties, name) {
 			const newPositions = new_positions[0];
 			const newColor = colors[0];
 			const newNormal = new_normals[0];
-			
+
 	
 			// Create a simple buffer geometry and material for debugging
 			const geometry = new THREE.BufferGeometry();
@@ -288,7 +317,7 @@ function get_timepoints(properties, name) {
 			
 			// Create a new Points object for debugging
 			let uniforms = {
-				pointSize: { value: 0.1 },
+				pointSize: { value: properties['point_size'] },
 				alpha: {value: 1.0},
 				shading_type: {value: 1},
 			};
@@ -328,6 +357,23 @@ function get_labels(properties){
 	}
 	return labels
 }
+
+function get_timelabels(properties) {
+	const labels = new THREE.Group();
+	labels.name = "timelabels"
+	for (let i=0; i<properties['labels'].length; i++){
+		const labelDiv = document.createElement('div');
+		labelDiv.className = 'label';
+		labelDiv.style.color = "rgb("+properties['colors'][i][0]+", "+properties['colors'][i][1]+", "+properties['colors'][i][2]+")"; 
+		labelDiv.textContent = properties['labels'][i];
+	
+		const label_2d = new CSS2DObject(labelDiv);
+		label_2d.position.set(properties['positions'][i][0], properties['positions'][i][1], properties['positions'][i][2]);
+		label_2d.timewindow = properties['time'][i];
+		labels.add(label_2d);
+	}
+	return labels
+  }
 
 function get_circles_2d(properties){
 	const labels = new THREE.Group();
@@ -631,9 +677,9 @@ function init_gui(objects){
 			fol.add(value, 'visible').name(splits[1]).onChange(render);
 			fol.open();
 		} else {
-			// if (value.name.localeCompare('labels') != 0) {
-			// 	gui.add(value, 'visible').name(name).onChange(render);
-			// }
+			if (value.name.localeCompare('labels') != 0 && value.name.localeCompare('timelabels') != 0) {
+				gui.add(value, 'visible').name(name).onChange(render);
+			}
 			if (value && value.name && value.name.localeCompare('labels') != 0) {
 				gui.add(value, 'visible').name(name).onChange(render);
 			}
@@ -661,6 +707,15 @@ function updateTimer() {
 
 function render() {
     renderer.render(scene, camera);
+	// for (const [key, value] of Object.entries(threejs_objects)) {
+    //     if (value.name === 'timelabels') {
+    //         value.traverse((object) => {
+    //             if (object instanceof CSS2DObject) {
+    //                 object.visible = value.visible;
+    //             }
+    //         });
+    //     }
+    // }
 	labelRenderer.render(scene, camera);
 }
 
@@ -763,9 +818,20 @@ async function create_threejs_objects(properties){
 			threejs_objects[object_name] = await get_timepoints(object_properties,object_name);
 			render();
 		}
+		if (String(object_properties['type']).localeCompare('timelines') == 0){
+			threejs_objects[object_name] = await get_timelines(object_properties,object_name);
+			render();
+		}
+		if (String(object_properties['type']).localeCompare('timelabels') == 0){
+			threejs_objects[object_name] = await get_timelabels(object_properties,object_name);
+			step_progress_bar();
+			render();
+		}
 		
 		threejs_objects[object_name].visible = object_properties['visible'];
 		threejs_objects[object_name].frustumCulled = false;
+		
+		
 	}
 	
 	// Add axis helper
@@ -797,55 +863,6 @@ function update_controls(){
 	controls.enablePan = true; // enable dragging
 }
 
-function updateColors() {
-    // Update the color properties of the objects based on the current timestep
-    for (const [object_name, object] of Object.entries(threejs_objects)) {
-        if (object.material) {
-            // Check if the object is an arrow
-		
-            if (object_name.startsWith("Axis")) {
-                // Update the color of the arrow material
-				object.material.color.setRGB(Math.sin(Date.now() * 0.001), Math.cos(Date.now() * 0.001), Math.tan(Date.now() * 0.001));
-                // object.material.uniforms.alpha.value = Math.sin(Date.now() * 0.001); // Example color change based on timestamp
-            } 
-        }
-    }
-
-    // Re-render the scene after updating the object properties
-    render();
-}
-function updatePoints() {
-	const timerElement = document.getElementById('timer');
-	const timerValue = timerElement.textContent;
-	
-	for (const [object_name, object] of Object.entries(threejs_objects)) {
-		const objectNameParts = object_name.split(' ');
-		if (objectNameParts.length > 1) {
-			
-		const objectTimeParts = objectNameParts[1].split(';');
-		const milliObjectTimeParts = objectNameParts[1].split('.');
-		if (objectTimeParts.length === 3) {
-			
-			// const objectTime = `${objectTimeParts[0].padStart(2, '0')}:${objectTimeParts[1].padStart(2, '0')}:${objectTimeParts[2].replace(/\.\d{0}/, ':')}`;
-			const objectTime = `${objectTimeParts[0].padStart(2, '0')}:${objectTimeParts[1].padStart(2, '0')}:${objectTimeParts[2].replace(/\..*/, '')}`;
-
-
-			const timerTimeParts = timerValue.split(':');
-			// const timerTime = `${timerTimeParts[0].padStart(2, '0')}:${timerTimeParts[1].padStart(2, '0')}:${timerTimeParts[2].padStart(2, '0')}:${timerTimeParts[3].padStart(2, '0')}`;
-			const timerTime = `${timerTimeParts[0].padStart(2, '0')}:${timerTimeParts[1].padStart(2, '0')}:${timerTimeParts[2].padStart(2, '0')}`;
-
-			if (objectTime == timerTime) {
-				console.log("visible");
-			threejs_objects[object_name].visible = true;
-			} else {
-			threejs_objects[object_name].visible = false;
-			}
-		}
-		}
-	}
-  }
-
-
 const scene = new THREE.Scene();
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -868,10 +885,16 @@ let mouse = new THREE.Vector2();
 
 const gui = new GUI({autoPlace: true, width: 120});
 
+const slider = document.getElementById('slider');
+
+
 // dict containing all objects of the scene
 let threejs_objects = {};
 
 let time_data = {};
+let line_time_data = {};
+
+let scene_update_frequency = 10;
 
 init();
 
@@ -883,24 +906,64 @@ fetch('nodes.json')
     .then(json_response => create_threejs_objects(json_response))
     .then(() => add_threejs_objects_to_scene(threejs_objects))
     .then(() => init_gui(threejs_objects))
+	.then(() => init_slider())
 	.then(() => console.log('Done'))
 	.then(() => console.log(threejs_objects))
 	.then(() => {
-        setInterval(updateHandPosition, 100);
-        setInterval(updateTimer, 10);
+        setInterval(updateTimeData, scene_update_frequency);
+        // setInterval(updateTimer, scene_update_frequency);
 		render();
     });
 
-function updateHandPosition() {
+function updateTimeData() {
 
+	slider.value++;
+	if(parseFloat(slider.value) >= parseFloat(slider.max))
+	{
+		slider.value = 0;
+		startTime =  new Date().getTime()
+		for (let key in time_data) 
+		{
+			if (time_data.hasOwnProperty(key)) 
+			{	
+				let nestedDict = time_data[key];
+				nestedDict["index"] = 0; 
+				threejs_objects[key].visible = true;
+			}
+		}
+		for (let key in line_time_data)
+		{
+			if (line_time_data.hasOwnProperty(key)) 
+			{	
+				let nestedDict = line_time_data[key];
+				nestedDict["index"] = 0; 
+				threejs_objects[key].visible = true;
+			}
+		
+		}
+	}
+	
 	for (let key in time_data) 
 	{
+
 		if (time_data.hasOwnProperty(key)) 
 		{
+			
 			let nestedDict = time_data[key];
-			nestedDict["index"] = nestedDict["index"] + 1; 
+			// if ((1/(0.001*scene_update_frequency)) * parseFloat(slider.value)%nestedDict["frequency"] != 0) {
+			// 	continue;
+			// } 
+			// nestedDict["index"] = nestedDict["index"] + 1;
+			nestedDict["index"] = Math.floor(((0.001*scene_update_frequency))  *  parseFloat(slider.value)*nestedDict["frequency"])
 			if (nestedDict["index"] >= nestedDict.position.length) {
-				nestedDict["index"] = 0;
+				if (parseFloat(slider.value) < parseFloat(slider.max)) {
+					nestedDict["index"] = nestedDict.position.length - 1;
+					threejs_objects[key].visible = false;
+				}
+				else {
+					nestedDict["index"] = 0;
+					threejs_objects[key].visible = true;
+				}
 			}
 			
 			
@@ -908,15 +971,9 @@ function updateHandPosition() {
 			const newPositions = nestedDict.position[nestedDict["index"]];
 			const newColor = nestedDict.color[nestedDict["index"]];
 			const newNormal = nestedDict.normal[nestedDict["index"]];
-			
 	
 			// Get the existing geometry and material from the threejs_objects object
 			const geometry = threejs_objects[key].geometry;
-			const material = threejs_objects[key].material;
-			material.uniforms.pointSize.value = 10; // Set the new point size
-            material.uniforms.alpha.value = 1.0; // Set the new alpha value
-            material.uniforms.shading_type.value = 1;
-			// const material = new THREE.PointsMaterial({ color: 0xff0000, size: 0.01 }); // Red color
 			const flatNormals = newNormal.flat();
 			geometry.setAttribute('normal', new THREE.Float32BufferAttribute(flatNormals, 3));
 			const flatColors = newColor.flat();
@@ -924,9 +981,6 @@ function updateHandPosition() {
 			// Convert the new positions to a flat array for the geometry
 			const flatPositions = newPositions.flat();
 			geometry.setAttribute('position', new THREE.Float32BufferAttribute(flatPositions, 3));
-
-			// If you need to recompile the shader
-			material.needsUpdate = true;
 			
 			geometry.attributes.position.needsUpdate = true;
 			geometry.attributes.normal.needsUpdate = true;
@@ -934,21 +988,169 @@ function updateHandPosition() {
 
 		}
 	}
+	
+	for (let key in line_time_data) 
+	{
+		if (line_time_data.hasOwnProperty(key)) 
+		{
+			
+			let nestedDict = line_time_data[key];
+			// if ((1/(0.001*scene_update_frequency))  * parseFloat(slider.value)%nestedDict["frequency"] != 0) {
+			// 	continue;
+			// } 
+			
+			// nestedDict["index"] = nestedDict["index"] + 1; 
+			nestedDict["index"] = Math.floor(((0.001*scene_update_frequency))  *  parseFloat(slider.value)*nestedDict["frequency"])
+			if (nestedDict["index"] >= nestedDict.position.length) {
+				if (parseFloat(slider.value) < parseFloat(slider.max)) {
+					nestedDict["index"] = nestedDict.position.length - 1;
+					threejs_objects[key].visible = false;
+				}
+				else {
+					nestedDict["index"] = 0;
+					threejs_objects[key].visible = true;
+				}
+			}
+			
+			const newPositions = nestedDict.position[nestedDict["index"]];
+			const newColor = nestedDict.color[0];
+			
+	
+			// Get the existing geometry and material from the threejs_objects object
+			const geometry = threejs_objects[key].geometry;
+			const flatColors = newColor.flat();
+			geometry.setAttribute('color', new THREE.Float32BufferAttribute(flatColors, 3));
+			// Convert the new positions to a flat array for the geometry
+			const flatPositions = newPositions.flat();
+			geometry.setAttribute('position', new THREE.Float32BufferAttribute(flatPositions, 3));
+
+			geometry.attributes.position.needsUpdate = true;
+			geometry.attributes.color.needsUpdate = true;
+
+		}
+	}
+
+
+	for (const [key, value] of Object.entries(threejs_objects)) {
+        if (value.name === 'timelabels') {
+            value.traverse((object) => {
+                if (object instanceof CSS2DObject) {
+					if(parseFloat(slider.value) >= object.timewindow[0] * 100 && parseFloat(slider.value) < object.timewindow[1] * 100)
+					{
+						object.visible = true;
+					}
+					else {
+						object.visible = false;
+					}
+                }
+            });
+        }
+    }
 }
 document.getElementById('reset_button').onclick = function() {
     // Handle button click here
 	resetTime();
 };
-// document.getElementById("reset_button").onclick = () => myFunction();
+
 function resetTime() {
+	slider.value = 0;
 	for (let key in time_data) 
 	{
 		if (time_data.hasOwnProperty(key)) 
 		{	
 			let nestedDict = time_data[key];
 			nestedDict["index"] = 0; 
+			threejs_objects[key].visible = true;
 		}
+	}
+	for (let key in line_time_data)
+	{
+		if (line_time_data.hasOwnProperty(key)) 
+		{	
+			let nestedDict = line_time_data[key];
+			nestedDict["index"] = 0; 
+			threejs_objects[key].visible = true;
+		}
+	
 	}
 	// Reset the start time to the current time
 	startTime = new Date().getTime();
 };
+
+function init_slider()
+{
+	console.log("init_slider");
+	let max_fq = 0;
+	let max_steps = 0;
+	let max_time = 0;
+	for (let key in time_data) 
+	{
+		if (time_data.hasOwnProperty(key)) 
+		{	
+			let nestedDict = time_data[key];
+			let time =  nestedDict.position.length /  nestedDict["frequency"];
+			if(time>max_time)
+			{
+				max_time = time;
+			}
+		}
+	}
+	for (let key in line_time_data)
+	{
+		if (line_time_data.hasOwnProperty(key)) 
+		{	
+			let nestedDict = line_time_data[key];
+			let time =  nestedDict.position.length /  nestedDict["frequency"];
+			if(time>max_time)
+			{
+				max_time = time;
+			}
+		}
+	}
+	slider.max = Math.floor(max_time * (1/(0.001*scene_update_frequency)));
+}
+
+function handleSliderChange() {
+	for (let key in time_data) 
+	{
+		if (time_data.hasOwnProperty(key)) 
+		{	
+			let nestedDict = time_data[key];
+			nestedDict["index"] = Math.floor(((0.001*scene_update_frequency))  *  parseFloat(slider.value)*nestedDict["frequency"])
+			if (nestedDict["index"] >= nestedDict.position.length) {
+				if (parseFloat(slider.value) < parseFloat(slider.max)) {
+					nestedDict["index"] = nestedDict.position.length - 1;
+				}
+				else {
+					nestedDict["index"] = 0;
+					threejs_objects[key].visible = true;
+				}
+			}
+		}
+	}
+	for (let key in line_time_data)
+	{
+		if (line_time_data.hasOwnProperty(key)) 
+		{	
+			let nestedDict = line_time_data[key];
+			nestedDict["index"] = Math.floor(((0.001*scene_update_frequency))  *  parseFloat(slider.value)*nestedDict["frequency"])
+			if (nestedDict["index"] >= nestedDict.position.length) {
+				if (parseFloat(slider.value) < parseFloat(slider.max)) {
+					nestedDict["index"] = nestedDict.position.length - 1;
+					threejs_objects[key].visible = false;
+				}
+				else {
+					nestedDict["index"] = 0;
+					threejs_objects[key].visible = true;
+				}
+			}
+			
+		}
+	}
+	
+	startTime =  new Date().getTime() - parseFloat(slider.value)*10;
+}
+  
+// Add an event listener to the slider
+slider.addEventListener('input', handleSliderChange);
+

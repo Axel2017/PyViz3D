@@ -4,7 +4,7 @@
 class TimeLines:
     """Set of points defined by positions, colors, normals and more."""
 
-    def __init__(self, positions, colors, normals, point_size, resolution, visible, alpha, shading_type=1):
+    def __init__(self, positions, colors, normals, point_size, resolution, visible, alpha, shading_type=1,frequency=0):
         self.positions = positions
         self.colors = colors
         self.normals = normals
@@ -12,7 +12,8 @@ class TimeLines:
         self.resolution = resolution
         self.visible = visible
         self.alpha = alpha
-        self.shading_type = shading_type
+        self.shading_type = shading_type,
+        self.frequency = frequency
 
     def get_properties(self, binary_filename):
         """
@@ -26,7 +27,8 @@ class TimeLines:
             'point_size': self.point_size,
             'num_points': len(self.positions),
             'binary_filename': binary_filename,
-            'shape': self.positions.shape}
+            'shape': self.positions.shape,
+            'frequency': self.frequency}
         return json_dict
 
     def write_binary(self, path):
