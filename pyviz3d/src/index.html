@@ -115,6 +115,7 @@
 	<body>
 	<div id="timer" style="position: absolute; top: 10px; left: 10px; color: black; font-size: 16px;"></div>
 	<button id="reset_button">Reset Timer</button>
+	<button id="play_button">Play</button>
 	<div id="render_container"></div>
 	<div id="slider-container">
 		<input type="range" id="slider" min="0" max="100" value="0">
@@ -137,10 +138,16 @@
 				left: 10px;
 				z-index: 1; /* Ensure it's above the canvas */
 			}
+			#play_button {
+				position: fixed;
+				bottom: 10px;
+				left: 120px;
+				z-index: 1; /* Ensure it's above the canvas */
+			}
 			#slider-container {
 				position: fixed;
 				bottom: 5px; /* Same as the reset button's bottom position */
-				left: 120px; /* Add some padding from the left edge */
+				left: 170px; /* Add some padding from the left edge */
 				right: 10px; /* Leave enough space for the reset button */
 				background-color: rgba(255, 255, 255, 0.8);
 				padding: 10px;

@@ -18,6 +18,7 @@ def main():
         for i, structure in enumerate(data['layer ' + str(j)]['points']):
             points = np.reshape(structure['coordinates'], [-1, 2])
             points = np.concatenate((points, np.zeros([points.shape[0], 1])), axis=1)
+            print(points.shape)
             color = np.array(colors[data['layer ' + str(j)]['layer name']])
             v.add_polyline('Polyline' + str(i), positions=points, edge_width=0.04, color=color)
     v.save('example_polylines')

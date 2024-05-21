@@ -690,19 +690,27 @@ function init_gui(objects){
 let startTime;
 
 function updateTimer() {
-    const currentTime = new Date().getTime();
-    const elapsedTime = currentTime - startTime;
+	if (pause == true) {
+		requestAnimationFrame(updateTimer);
+		render();
+	}
+	else
+	{
+		const currentTime = new Date().getTime();
+		const elapsedTime = currentTime - startTime;
 
-    const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
-    const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
-    const milliseconds = Math.floor(elapsedTime % 1000);
+		const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
+		const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+		const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+		const milliseconds = Math.floor(elapsedTime % 1000);
 
-    const timerElement = document.getElementById('timer');
-    timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${milliseconds.toString().padStart(3, '0')}`;
-	
-    requestAnimationFrame(updateTimer);
-	render();
+		const timerElement = document.getElementById('timer');
+		timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${milliseconds.toString().padStart(3, '0')}`;
+		
+		requestAnimationFrame(updateTimer);
+		render();
+	}
+    
 }
 
 function render() {
@@ -893,6 +901,7 @@ let threejs_objects = {};
 
 let time_data = {};
 let line_time_data = {};
+let pause = false;
 
 let scene_update_frequency = 10;
 
@@ -916,7 +925,17 @@ fetch('nodes.json')
     });
 
 function updateTimeData() {
-
+	document.getElementById('play_button').onclick = function() {
+		if (pause == false ){
+			pause = true;
+		}
+		else {
+			pause = false;
+		}
+	  };
+	if (pause == true) {
+		return;
+	}
 	slider.value++;
 	if(parseFloat(slider.value) >= parseFloat(slider.max))
 	{
