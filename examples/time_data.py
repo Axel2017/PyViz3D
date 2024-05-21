@@ -275,7 +275,7 @@ def main():
     room_path = find_file(directory, "output.obj")
     room_transform_path = find_file(directory, "iPhoneMesh.json")
     # First, we set up a visualizer
-    v = viz.Visualizer()
+    v = viz.Visualizer(up=np.array([0,-1,0]))
 
     
     

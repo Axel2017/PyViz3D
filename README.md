@@ -79,6 +79,19 @@ To create beautiful illustrations with blender consider the following points:
 - Upload to PyPi: `twine upload dist/*`
 
 
+# Development
+create conda environment and add PyViz3D to your path (change path)
+```
+conda create --name viz_contribute --file requirements.txt
+conda activate viz_contribute
+export PYTHONPATH=/Users/name/PathToFolderPyViz3D:$PYTHONPATH
+```
+Compile visualisation
+```
+python examples/time_data.py
+```
+
+
 # BibTeX
 Please consider citing PyViz3D in your publications if it helps your research.
 ```
