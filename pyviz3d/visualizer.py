@@ -89,7 +89,7 @@ class Visualizer:
         # Display link
         http_server_string = "python -m SimpleHTTPServer " + str(port)
         if sys.version[0] == "3":
-            http_server_string = "python -m http.server " + str(port)
+            http_server_string = "python ../run_server.py " + str(port)
         print("")
         print(
             "************************************************************************"

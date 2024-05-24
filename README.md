@@ -80,12 +80,21 @@ To create beautiful illustrations with blender consider the following points:
 
 
 # Development
+## For MacOS
 create conda environment and add PyViz3D to your path (change path)
 ```
 conda create --name viz_contribute --file requirements.txt
 conda activate viz_contribute
 export PYTHONPATH=/Users/name/PathToFolderPyViz3D:$PYTHONPATH
 ```
+## For Windows
+create conda environment and add PyViz3D to your path (change path)
+```
+conda create --name viz_contribute --file requirements_windows.txt
+conda activate viz_contribute
+SET PYTHONPATH=/Users/name/PathToFolderPyViz3D
+```
+## Run example
 Compile visualisation
 ```
 python examples/time_data.py
