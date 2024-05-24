@@ -92,7 +92,8 @@ create conda environment and add PyViz3D to your path (change path)
 ```
 conda create --name viz_contribute --file requirements_windows.txt
 conda activate viz_contribute
-SET PYTHONPATH=/Users/name/PathToFolderPyViz3D
+pip install open3d
+SET PYTHONPATH=/PathToFolderPyViz3D
 ```
 ## Run example
 Compile visualisation
