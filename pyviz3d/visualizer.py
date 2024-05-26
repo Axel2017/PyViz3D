@@ -244,7 +244,6 @@ blender_tools.main()")
         :param alpha: Alpha value of colors.
         """
         assert positions[0].shape[1] == 3
-        print(np.array([positions[0].shape[0]/2,positions[0].shape[1]])," ",colors[0].shape)
         assert colors[0] is None or np.all(np.array([positions[0].shape[0]/2,positions[0].shape[1]]) == colors[0].shape)
         assert normals is None or positions[0].shape == normals[0].shape
 

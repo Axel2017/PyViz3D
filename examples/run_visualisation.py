@@ -19,12 +19,12 @@ def open_private_tab():
     script = f'''
     tell application "Safari"
         activate
-        delay 1
+        delay 0.3
         tell application "System Events"
             keystroke "N" using {{shift down, command down}}
-            delay 1
+            delay 0.3
             keystroke "http://localhost:{port}"
-            delay 1
+            delay 0.3
             keystroke return
         end tell
     end tell
@@ -36,8 +36,7 @@ if __name__ == "__main__":
     server_process = start_server()
 
     # Wait for the server to start
-    time.sleep(1)
-
+    time.sleep(0.3)
     # Open the private tab in Safari
     open_private_tab()
 

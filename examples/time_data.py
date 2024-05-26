@@ -1,20 +1,24 @@
 import numpy as np
-import pyviz3d.visualizer as viz
 import json
 import sys
 from datetime import datetime, timedelta
-import math
 import os
 import argparse
 import shutil
 
 # Add utils directory to the path
 import sys
-
 sys.path.append(f"{os.getcwd()}/utils")
-
 import utils
 
+try:
+    import pyviz3d.visualizer as viz
+except ModuleNotFoundError:
+    print()
+    print(f"Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:")
+    pyviz_dir = utils.PYVIZ_DIR.replace(" ", "\ ")
+    print(f"export PYTHONPATH={pyviz_dir}:$PYTHONPATH")
+    exit(1)  # Exit the script with an error code
 
 def read_time_data(file_path, color=np.array([255, 0, 0])):
     # Load the JSON data from the file
@@ -165,7 +169,7 @@ def find_file(directory, filename_pattern):
     """
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if filename_pattern in file:
+            if filename_pattern.lower() in file.lower():
                 return os.path.join(root, file)
 
 
