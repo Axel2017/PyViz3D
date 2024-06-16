@@ -3,6 +3,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 import os
+import platform
 import argparse
 import shutil
 
@@ -13,11 +14,27 @@ import utils
 
 # Check if the pyviz3d module is in the PYTHONPATH
 pyviz_dir = utils.PYVIZ_DIR.replace(" ", "\ ")
-current_path = os.getenv('PYTHONPATH', '')
-if pyviz_dir not in current_path.replace(" ", "\ "):
-    print(f"\n Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:\n")
-    print(f"export PYTHONPATH={pyviz_dir}:$PYTHONPATH")
-    exit(1)  # Exit the script with an error code
+python_path = os.getenv('PYTHONPATH', '')
+
+if utils.OPERATING_SYSTEM == 'Windows':
+    if pyviz_dir not in python_path.replace(" ", "\ "):
+        # Set PYTHONPATH for Windows (PowerShell syntax)
+        print(f"\n Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:\n")
+        print(f"$env:PYTHONPATH={pyviz_dir}")
+        exit(1)  # Exit the script with an error code
+
+elif utils.OPERATING_SYSTEM == 'Linux' or utils.OPERATING_SYSTEM == 'Darwin':  # Linux or macOS
+    if pyviz_dir not in current_path.replace(" ", "\ "):
+        print(f"\n Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:\n")
+        print(f"export PYTHONPATH={pyviz_dir}:$PYTHONPATH")
+        exit(1)  # Exit the script with an error code
+else:
+    print(f"Unsupported operating system: {current_os}")
+
+#if pyviz_dir not in current_path.replace(" ", "\ "):
+#    print(f"\n Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:\n")
+#    print(f"export PYTHONPATH={pyviz_dir}:$PYTHONPATH")
+#    exit(1)  # Exit the script with an error code
 
 # export path needed to import pyviz3d visualizer
 import pyviz3d.visualizer as viz
@@ -338,10 +355,13 @@ def main(args):
     # =============================
 
     # Run visualisation
-    cmd = f"python '{os.path.join(utils.PYVIZ_DIR, 'examples', 'run_visualisation.py')}'"
+    if utils.OPERATING_SYSTEM == 'Windows':
+        cmd = f"python \"{os.path.join(utils.PYVIZ_DIR, 'examples', 'run_visualisation.py')}\""
+    else:
+        cmd = f"python '{os.path.join(utils.PYVIZ_DIR, 'examples', 'run_visualisation.py')}'"
+
     os.system(cmd)
-
-
+    
     try:
         shutil.rmtree(visualisation_path)
         print(f"Cleanup successful")
