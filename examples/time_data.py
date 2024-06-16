@@ -24,12 +24,12 @@ if utils.OPERATING_SYSTEM == 'Windows':
         exit(1)  # Exit the script with an error code
 
 elif utils.OPERATING_SYSTEM == 'Linux' or utils.OPERATING_SYSTEM == 'Darwin':  # Linux or macOS
-    if pyviz_dir not in current_path.replace(" ", "\ "):
+    if pyviz_dir not in python_path.replace(" ", "\ "):
         print(f"\n Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:\n")
         print(f"export PYTHONPATH={pyviz_dir}:$PYTHONPATH")
         exit(1)  # Exit the script with an error code
 else:
-    print(f"Unsupported operating system: {current_os}")
+    print(f"Unsupported operating system: {utils.OPERATING_SYSTEM}")
 
 #if pyviz_dir not in current_path.replace(" ", "\ "):
 #    print(f"\n Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:\n")
