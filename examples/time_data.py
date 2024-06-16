@@ -11,14 +11,16 @@ import sys
 sys.path.append(f"{os.getcwd()}/utils")
 import utils
 
-try:
-    import pyviz3d.visualizer as viz
-except ModuleNotFoundError:
-    print()
-    print(f"Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:")
-    pyviz_dir = utils.PYVIZ_DIR.replace(" ", "\ ")
+# Check if the pyviz3d module is in the PYTHONPATH
+pyviz_dir = utils.PYVIZ_DIR.replace(" ", "\ ")
+current_path = os.getenv('PYTHONPATH', '')
+if pyviz_dir not in current_path.replace(" ", "\ "):
+    print(f"\n Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:\n")
     print(f"export PYTHONPATH={pyviz_dir}:$PYTHONPATH")
     exit(1)  # Exit the script with an error code
+
+# export path needed to import pyviz3d visualizer
+import pyviz3d.visualizer as viz
 
 def read_time_data(file_path, color=np.array([255, 0, 0])):
     # Load the JSON data from the file
