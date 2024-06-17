@@ -20,7 +20,7 @@ if utils.OPERATING_SYSTEM == 'Windows':
     if pyviz_dir not in python_path.replace(" ", "\ "):
         # Set PYTHONPATH for Windows (PowerShell syntax)
         print(f"\n Module 'pyviz3d' not found. Please run the following command to set the PYTHONPATH:\n")
-        print(f"$env:PYTHONPATH={pyviz_dir}")
+        print(f'$env:PYTHONPATH="{pyviz_dir}"')
         exit(1)  # Exit the script with an error code
 
 elif utils.OPERATING_SYSTEM == 'Linux' or utils.OPERATING_SYSTEM == 'Darwin':  # Linux or macOS
